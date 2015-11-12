@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		C58F79E41BF40E950086E651 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C58F79E31BF40E950086E651 /* main.cpp */; };
+		C58F79EB1BF40ED10086E651 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C58F79EA1BF40ED10086E651 /* OpenGL.framework */; };
+		C58F79ED1BF40ED80086E651 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C58F79EC1BF40ED80086E651 /* GLUT.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,8 @@
 /* Begin PBXFileReference section */
 		C58F79E01BF40E950086E651 /* CS300PROJECT3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CS300PROJECT3; sourceTree = BUILT_PRODUCTS_DIR; };
 		C58F79E31BF40E950086E651 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		C58F79EA1BF40ED10086E651 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		C58F79EC1BF40ED80086E651 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +36,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C58F79ED1BF40ED80086E651 /* GLUT.framework in Frameworks */,
+				C58F79EB1BF40ED10086E651 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,6 +47,8 @@
 		C58F79D71BF40E950086E651 = {
 			isa = PBXGroup;
 			children = (
+				C58F79EC1BF40ED80086E651 /* GLUT.framework */,
+				C58F79EA1BF40ED10086E651 /* OpenGL.framework */,
 				C58F79E21BF40E950086E651 /* CS300PROJECT3 */,
 				C58F79E11BF40E950086E651 /* Products */,
 			);
@@ -207,6 +215,7 @@
 		C58F79E81BF40E950086E651 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -214,6 +223,7 @@
 		C58F79E91BF40E950086E651 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
