@@ -1,7 +1,9 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Name: Nan Jiang, Pratistha Bhandari, Xiangyu Li 
- * Assignment: Project 3 * Title: program title 
- * Course: CS 300 * Semester: Fall 2015 
+ * Assignment: Project 3 
+ * Title: program title 
+ * Course: CS 300 
+ * Semester: Fall 2015 
  * Instructor: D. Byrnes 
  * Date: the current date 
  * Sources consulted: any books consulted in writing the program 
