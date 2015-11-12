@@ -1,10 +1,14 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * CSCI 300 Graphics Project 3
- *
- * Nan Jiang, Pratistha Bhandari, Xiangyu Li *
- *
- * Activity.cpp - An implementation file for navigation.
- *
+ * Name: Nan Jiang, Pratistha Bhandari, Xiangyu Li 
+ * Assignment: Project 3 * Title: program title 
+ * Course: CS 300 * Semester: Fall 2015 
+ * Instructor: D. Byrnes 
+ * Date: the current date 
+ * Sources consulted: any books consulted in writing the program 
+ * Program description: a description of what your program does 
+ * Known bugs: description of known bugs and other program imperfections 
+ * Creativity: anything extra you added to the program 
+ * Instructions: instructions to user on how to execute your program 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <cmath>
