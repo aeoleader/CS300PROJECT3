@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <iostream>
 #include "tgaClass.h"
-#include <vector>
 
 using namespace std;
 GLUquadricObj *obj;
@@ -44,17 +43,28 @@ GLfloat light_pos[] = { 0.3, 0.2, 0.6, 0.0 };
 GLfloat g_rotateX = 0, g_rotateY = 0;
 
 GLfloat f_rotateY = 0;
+GLfloat rotateYtea = 0;
 bool f_turn = false;
 
+/////// @Pratshita /////////////
 GLfloat trans_y = 0;
+/////////////////////////////////
+
+/////// @Xiangyu Li /////////////
+float lastx, lasty;
+float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
+bool jumpping = false;
+bool forwarding = false;
+bool backwarding = false;
+bool leftshift = false;
+bool rightshift = false;
+int counter = 0;
+/////////////////////////////////
 
 // This holds the zoom value of our scope
 GLfloat g_zoom = 120;
 
 GLUquadricObj *qobj;         // Pointer for quadric objects.
-
-
-
 
 // Bounding box
 struct BoundingBox {
@@ -142,7 +152,6 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 // Initialize OpenGL graphics
 void init(void)
 {
@@ -153,12 +162,14 @@ void init(void)
     gluPerspective(60.0,(GLfloat)width/(GLfloat)height, 0.1, 300);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glutSetCursor(GLUT_CURSOR_NONE);
-    glutWarpPointer( SCREEN_WIDTH/2 , SCREEN_HEIGHT/2);
+    
     CreateTexture(g_Texture, "Sky.tga", 0);			// Load our texture for the sky
     CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
     CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
     
+    //@Xiangyu Li
+    glutSetCursor(GLUT_CURSOR_NONE);
+    glutWarpPointer( SCREEN_WIDTH/2 , SCREEN_HEIGHT/2);
     
     glClearColor(1, 1, 1, 1);           // White background
     glShadeModel (GL_SMOOTH);
@@ -167,41 +178,52 @@ void init(void)
 
 void drawBackground(void)
 {
-    // Draw 2D background
-    glMatrixMode(GL_PROJECTION );
-    glLoadIdentity();
-    glOrtho(0,1,0,1,-1,1);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDepthMask(GL_FALSE);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
+//    glEnable(GL_TEXTURE_2D);
+    //glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
     
     // Display a 2D quad with the sky texture.
+    glColor3f(1.0, 0.0, 0.0);
+    GLfloat width = 50.0;
     glBegin(GL_QUADS);
+    // Top face (y = 10.0f)
+    glVertex3f( width,  40.0f, -width);
+    glVertex3f(-width,  40.0f, -width);
+    glVertex3f(-width,  40.0f,  width);
+    glVertex3f( width,  40.0f,  width);
     
-    // Display the top left point of the 2D image
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(0, 0);
+    // Bottom face (y = -30.0f)
+    glVertex3f( width, -50.0f, -width);
+    glVertex3f(-width, -50.0f, -width);
+    glVertex3f(-width, -50.0f,  width);
+    glVertex3f( width, -50.0f,  width);
     
-    // Display the bottom left point of the 2D image
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex2f(0, 1);
+    // Front face (z = widthf)
+    glVertex3f( width,  40.0f,  width);
+    glVertex3f(-width,  40.0f,  width);
+    glVertex3f(-width, -50.0f,  width);
+    glVertex3f( width, -50.0f,  width);
     
-    // Display the bottom right point of the 2D image
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(1, 1);
+    // Back face (z = -widthf)
+    glVertex3f( width, -50.0f, -width);
+    glVertex3f(-width, -50.0f, -width);
+    glVertex3f(-width,  40.0f, -width);
+    glVertex3f( width,  40.0f, -width);
     
-    // Display the top right point of the 2D image
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(1, 0);
+    // Left face (x = -widthf)
+    glVertex3f(-width,  40.0f,  width);
+    glVertex3f(-width,  40.0f, -width);
+    glVertex3f(-width, -50.0f, -width);
+    glVertex3f(-width, -50.0f,  width);
     
+    // Right face (x = width)
+    glVertex3f( width,  40.0f, -width);
+    glVertex3f( width,  40.0f,  width);
+    glVertex3f( width, -50.0f,  width);
+    glVertex3f( width, -50.0f, -width);
     // Stop drawing
     glEnd();
-    glDisable(GL_TEXTURE_2D);
+//    glDisable(GL_TEXTURE_2D);
+    glColor3f(1.0, 1.0, 1.0);
 }
 
 void drawFloating(float mag)  // multiples of 3
@@ -279,15 +301,16 @@ void drawFloating(float mag)  // multiples of 3
     glEnd();  // End of drawing color-cube
     glColor3f(1.0f, 1.0f, 1.0f);
 }
+
 void camera()
 {
     glRotatef(xrot, 1, 0, 0);
     glRotatef(yrot, 0, 1, 0);
     //gluLookAt(xpos, ypos, zpos, xrot, yrot, 0, 1, 1, 0);
-
     glTranslatef(-xpos, -ypos, -zpos);
 }
 
+//creates tall towers
 void drawTower()
 {
     obj = gluNewQuadric(); //creates a new quadric object
@@ -302,23 +325,68 @@ void drawTower()
     
     glPushMatrix();
     glTranslatef(0.0,10.0,0.0);
+    glColor3f(0.2, 0.7, 0.6);
     glutSolidCube(10.0);
+    glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
     glPushMatrix();
     glRotatef(-90.0,1.0,0.0,0.0);
     glTranslatef(0.0,0.0,15.0);
+    glColor3f(0.2, 0.6, 0.7);
     glutSolidCone(4.0,9.0,17.0,10.0);
-    //glutSolidSphere(5.0,10.0,10.0);
+    glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
 
+}
+
+//creates floating teapots in the sky
+void drawTeapots(void)
+{
+    glPushMatrix();
+    glTranslatef(0.0,0.85,100.0);
+    glColor3f(0.5, 0.0, 0.0);
+    glRotatef(rotateYtea, 0.0, 1.0, 0.0);
+    glutSolidTeapot(0.25);
+    
+    glColor3f(1.0, 1.0, 1.0);
+    glTranslatef(0.0,0.0,5.0);
+    glRotatef(rotateYtea, 0.0, 1.0, 0.0);
+    glColor3f(0.5, 0.0, 0.0);
+    glutSolidTeapot(0.25);
+    
+    glColor3f(1.0, 1.0, 1.0);
+    glTranslatef(0.0,0.0,5.0);
+    glRotatef(rotateYtea, 0.0, 1.0, 0.0);
+    glColor3f(0.5, 0.0, 0.0);
+    glutSolidTeapot(0.25);
+    
+    glColor3f(1.0, 1.0, 1.0);
+    glTranslatef(0.0,0.0,5.0);
+    glRotatef(rotateYtea, 0.0, 1.0, 0.0);
+    glColor3f(0.5, 0.0, 0.0);
+    glutSolidTeapot(0.25);
+    
+    glColor3f(1.0, 1.0, 1.0);
+    glPopMatrix();
+
+}
+
+//creates obstacles on the floating blocks (cones)
+void drawObstacle(void)
+{
+    glPushMatrix();
+    glColor3f(0.0, 0.5, 0.0);
+    glRotatef(-90,1.0,0.0,0.0);
+    glutSolidCone(0.5,1.75,5.0,5.0);
+    glColor3f(1.0, 1.0, 1.0);
+    glPopMatrix();
 }
 
 // display function
 void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    drawBackground();
     
     // Draw 3D Scene
     glDepthMask(GL_TRUE);
@@ -333,36 +401,33 @@ void display(void)
     glLoadIdentity();
     
     camera();
-
+    
     //    /******** Lighting Settings ********/
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
     //
-        glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
-        glMaterialf(GL_FRONT, GL_SHININESS, 100);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-        glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
+    glMaterialf(GL_FRONT, GL_SHININESS, 100);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     //
-        glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_COLOR_MATERIAL);
     //    /******** End Lighting ********/
 
 
 
     
-  
+    //obstacles on the last block
     glPushMatrix();
-    glTranslatef(0.0,0.85,100.0);
-    glutSolidTeapot(0.25);
-    glTranslatef(0.0,0.0,5.0);
-    glutSolidTeapot(0.25);
-    glTranslatef(0.0,0.0,5.0);
-    glutSolidTeapot(0.25);
-    glTranslatef(0.0,0.0,5.0);
-    glutSolidTeapot(0.25);
+    glTranslatef(-1.85,-2.0,89.0);
+    drawObstacle();
+    glTranslatef(3.7,0.0,0.0);
+    drawObstacle();
     glPopMatrix();
     
+    //draw tower
     glPushMatrix();
     glTranslatef(-40.0,0.0,50.0);
     drawTower();
@@ -375,6 +440,7 @@ void display(void)
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
+    //draw floating objects
     glPushMatrix();
     glTranslatef(0.0, -2.0, 90.0);
     buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93);
@@ -388,6 +454,7 @@ void display(void)
     buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113);
     objects.push_back(*buffer);
     drawFloating(9.0);
+    drawObstacle();
     glPopMatrix();
     
     glPushMatrix();
@@ -397,10 +464,14 @@ void display(void)
     drawFloating(3.0);
     glPopMatrix();
     
+    glPushMatrix();
+    glTranslatef(0.0, -2.0, 104.0);
+    drawBackground();
+    glPopMatrix();
+    
     //glColor3f(1.0f, 1.0f, 1.0f);
     glutSwapBuffers();
 }
-
 
 void mouseMovement(int x, int y) {
     int diffx=x-lastx; //check the difference between the current x and the last x position
@@ -444,6 +515,8 @@ void idle(void)
         f_rotateY += 0.8;
     else
         f_rotateY -= 0.8;
+    
+    rotateYtea += -0.25;
     
     float rate = 0.2;
     float xrotrad, yrotrad;
@@ -508,7 +581,6 @@ void idle(void)
  *  'w'  -  look up
  *  's'  -  look down
  */
-
 void keyboard(unsigned char key, int x, int y)
 {
     int w = glutGetWindow();
