@@ -163,41 +163,52 @@ void init(void)
 
 void drawBackground(void)
 {
-    // Draw 2D background
-    glMatrixMode(GL_PROJECTION );
-    glLoadIdentity();
-    glOrtho(0,1,0,1,-1,1);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDepthMask(GL_FALSE);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
+//    glEnable(GL_TEXTURE_2D);
+    //glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
     
     // Display a 2D quad with the sky texture.
+    glColor3f(1.0, 0.0, 0.0);
+    GLfloat width = 50.0;
     glBegin(GL_QUADS);
+    // Top face (y = 10.0f)
+    glVertex3f( width,  40.0f, -width);
+    glVertex3f(-width,  40.0f, -width);
+    glVertex3f(-width,  40.0f,  width);
+    glVertex3f( width,  40.0f,  width);
     
-    // Display the top left point of the 2D image
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(0, 0);
+    // Bottom face (y = -30.0f)
+    glVertex3f( width, -50.0f, -width);
+    glVertex3f(-width, -50.0f, -width);
+    glVertex3f(-width, -50.0f,  width);
+    glVertex3f( width, -50.0f,  width);
     
-    // Display the bottom left point of the 2D image
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex2f(0, 1);
+    // Front face (z = widthf)
+    glVertex3f( width,  40.0f,  width);
+    glVertex3f(-width,  40.0f,  width);
+    glVertex3f(-width, -50.0f,  width);
+    glVertex3f( width, -50.0f,  width);
     
-    // Display the bottom right point of the 2D image
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(1, 1);
+    // Back face (z = -widthf)
+    glVertex3f( width, -50.0f, -width);
+    glVertex3f(-width, -50.0f, -width);
+    glVertex3f(-width,  40.0f, -width);
+    glVertex3f( width,  40.0f, -width);
     
-    // Display the top right point of the 2D image
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(1, 0);
+    // Left face (x = -widthf)
+    glVertex3f(-width,  40.0f,  width);
+    glVertex3f(-width,  40.0f, -width);
+    glVertex3f(-width, -50.0f, -width);
+    glVertex3f(-width, -50.0f,  width);
     
+    // Right face (x = width)
+    glVertex3f( width,  40.0f, -width);
+    glVertex3f( width,  40.0f,  width);
+    glVertex3f( width, -50.0f,  width);
+    glVertex3f( width, -50.0f, -width);
     // Stop drawing
     glEnd();
-    glDisable(GL_TEXTURE_2D);
+//    glDisable(GL_TEXTURE_2D);
+    glColor3f(1.0, 1.0, 1.0);
 }
 
 void drawFloating(float mag)  // multiples of 3
@@ -361,7 +372,6 @@ void drawObstacle(void)
 void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    drawBackground();
     
     // Draw 3D Scene
     glDepthMask(GL_TRUE);
@@ -378,17 +388,17 @@ void display(void)
     camera();
     
     //    /******** Lighting Settings ********/
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
     //
-        glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
-        glMaterialf(GL_FRONT, GL_SHININESS, 100);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-        glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
+    glMaterialf(GL_FRONT, GL_SHININESS, 100);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     //
-        glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_COLOR_MATERIAL);
     //    /******** End Lighting ********/
     gluLookAt(0, 0, g_zoom,
               g_rotateX, g_rotateY, 0,
@@ -442,6 +452,11 @@ void display(void)
     glPushMatrix();
     glTranslatef(0.0, -2.0, 118.0);
     drawFloating(3.0);
+    glPopMatrix();
+    
+    glPushMatrix();
+    glTranslatef(0.0, -2.0, 104.0);
+    drawBackground();
     glPopMatrix();
     
     //glColor3f(1.0f, 1.0f, 1.0f);
