@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <iostream>
 #include "tgaClass.h"
+#include <vector>
 
 using namespace std;
 GLUquadricObj *obj;
@@ -50,21 +51,11 @@ bool f_turn = false;
 GLfloat trans_y = 0;
 /////////////////////////////////
 
-/////// @Xiangyu Li /////////////
-float lastx, lasty;
-float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
-bool jumpping = false;
-bool forwarding = false;
-bool backwarding = false;
-bool leftshift = false;
-bool rightshift = false;
-int counter = 0;
-/////////////////////////////////
 
 // This holds the zoom value of our scope
 GLfloat g_zoom = 120;
 
-GLUquadricObj *qobj;         // Pointer for quadric objects.
+GLUquadricObj *qobj;         // Pointer for quadric floors.
 
 // Bounding box
 struct BoundingBox {
@@ -78,9 +69,11 @@ struct BoundingBox {
     BoundingBox(float _left=0, float _right=0, float _top=0, float _bottom=0, float _front=0, float _back=0): left(_left), right(_right), top(_top), bottom(_bottom), front(_front), back(_back) {}
 };
 
-vector<BoundingBox> objects;
+vector<BoundingBox> floors;
 BoundingBox* buffer;
 
+
+vector<BoundingBox> objects;
 int which_object = 2;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /************************** Texture Mapping Operations ******************************************/
@@ -88,7 +81,7 @@ unsigned int g_Texture[MAX_TEXTURES] = {0};
 
 float lastx, lasty;
 
-float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 130, angle = 0.0, rx = 0, ry = 0, rz = 0;
+float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
 bool jumpping = false;
 bool forwarding = false;
 bool backwarding = false;
@@ -423,6 +416,8 @@ void display(void)
     glPushMatrix();
     glTranslatef(-1.85,-2.0,89.0);
     drawObstacle();
+    buffer = new BoundingBox(-2.35, -1.35, -1.5, 0.25, 88.5, 89.5);
+    objects.push_back(*buffer);
     glTranslatef(3.7,0.0,0.0);
     drawObstacle();
     glPopMatrix();
@@ -440,11 +435,11 @@ void display(void)
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
-    //draw floating objects
+    //draw floating floors
     glPushMatrix();
     glTranslatef(0.0, -2.0, 90.0);
     buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93);
-    objects.push_back(*buffer);
+    floors.push_back(*buffer);
     drawFloating(3.0);
     glPopMatrix();
     
@@ -452,15 +447,15 @@ void display(void)
     glTranslatef(0.0, -2.0, 104.0);
     //glRotatef(f_rotateY, 0.0, 1.0, 0.0);
     buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113);
-    objects.push_back(*buffer);
+    floors.push_back(*buffer);
     drawFloating(9.0);
     drawObstacle();
     glPopMatrix();
     
     glPushMatrix();
-    glTranslatef(0.0, -2.0, 130.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 127, 133);
-    objects.push_back(*buffer);
+    glTranslatef(0.0, -2.0, 118.0);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121);
+    floors.push_back(*buffer);
     drawFloating(3.0);
     glPopMatrix();
     
@@ -487,8 +482,8 @@ void mouseMovement(int x, int y) {
 void checkBounding(int x, int y)
 {
     bool flag = false;
-    for (int i = 0; i < objects.size();i++)
-        if (x <= objects[i].right && x >= objects[i].left && y >= objects[i].front && y <= objects[i].back) flag = true;
+    for (int i = 0; i < floors.size();i++)
+        if (x <= floors[i].right && x >= floors[i].left && y >= floors[i].front && y <= floors[i].back) flag = true;
     if (!flag) falling = true;
 }
 // keyboard callback function
