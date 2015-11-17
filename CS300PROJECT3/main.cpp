@@ -25,8 +25,8 @@ using namespace std;
 GLUquadricObj *obj;
 
 /***** Global variables *****/
-//const GLint SCREEN_WIDTH = 800;      // window dimensions
-//const GLint SCREEN_HEIGHT = 600;
+const GLint SCREEN_WIDTH = 800;      // window dimensions
+const GLint SCREEN_HEIGHT = 600;
 
 const int MAX_TEXTURES = 6;
 
@@ -46,11 +46,40 @@ GLfloat f_rotateY = 0;
 GLfloat rotateYtea = 0;
 bool f_turn = false;
 
+/////// @Pratshita /////////////
+GLfloat trans_y = 0;
+/////////////////////////////////
+
+/////// @Xiangyu Li /////////////
+float lastx, lasty;
+float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
+bool jumpping = false;
+bool forwarding = false;
+bool backwarding = false;
+bool leftshift = false;
+bool rightshift = false;
+int counter = 0;
+/////////////////////////////////
+
 // This holds the zoom value of our scope
 GLfloat g_zoom = 120;
 
 GLUquadricObj *qobj;         // Pointer for quadric objects.
 
+// Bounding box
+struct BoundingBox {
+    int left;
+    int right;
+    int top;
+    int bottom;
+    int front;
+    int back;
+    
+    BoundingBox(int _left=0, int _right=0, int _top=0, int _bottom=0, int _front=0, int _back=0): left(_left), right(_right), top(_top), bottom(_bottom), front(_front), back(_back) {}
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/************************** Texture Mapping Operations ******************************************/
 unsigned int g_Texture[MAX_TEXTURES] = {0};
 
 void CreateTexture(unsigned int textureArray[], char * strFileName, int textureID)
@@ -104,6 +133,9 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 }
+/************************** Texture Mapping Operations ******************************************/
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 // Initialize OpenGL graphics
 void init(void)
@@ -120,6 +152,9 @@ void init(void)
     CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
     CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
     
+    //@Xiangyu Li
+    glutSetCursor(GLUT_CURSOR_NONE);
+    glutWarpPointer( SCREEN_WIDTH/2 , SCREEN_HEIGHT/2);
     
     glClearColor(1, 1, 1, 1);           // White background
     glShadeModel (GL_SMOOTH);
@@ -241,6 +276,14 @@ void drawFloating(float mag)  // multiples of 3
     glColor3f(1.0f, 1.0f, 1.0f);
 }
 
+void camera()
+{
+    glRotatef(xrot, 1, 0, 0);
+    glRotatef(yrot, 0, 1, 0);
+    //gluLookAt(xpos, ypos, zpos, xrot, yrot, 0, 1, 1, 0);
+    glTranslatef(-xpos, -ypos, -zpos);
+}
+
 //creates tall towers
 void drawTower()
 {
@@ -332,6 +375,8 @@ void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
+    camera();
+    
     //    /******** Lighting Settings ********/
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
@@ -403,6 +448,17 @@ void display(void)
     glutSwapBuffers();
 }
 
+void mouseMovement(int x, int y) {
+    int diffx=x-lastx; //check the difference between the current x and the last x position
+    int diffy=y-lasty; //check the difference between the y and the last y position
+    lastx=x; //set lastx to the current x position
+    lasty=y; //set lasty to the current y position
+    if (xrot + (float) diffy <= 90 && xrot + (float) diffy >= -90) xrot += (float) diffy; //set the xrot to xrot with the addition of the difference in the y position
+    yrot += (float) diffx;    //set the xrot to yrot with the addition of the difference in the x position
+    glutPostRedisplay();
+}
+// keyboard callback function
+
 void idle(void)
 {
     if (f_rotateY >= 45)
@@ -416,6 +472,52 @@ void idle(void)
         f_rotateY -= 0.8;
     
     rotateYtea += -0.25;
+    
+    float rate = 0.2;
+    float xrotrad, yrotrad;
+    if (jumpping)
+    {
+        yrotrad = (yrot / 180 * 3.141592654f);
+        xrotrad = (xrot / 180 * 3.141592654f);
+        xpos += float(0.1*sin(yrotrad)) ;
+        zpos -= float(0.1*cos(yrotrad)) ;
+        
+        if (counter < 20) ypos += rate;
+        else if (counter < 39) ypos -= rate;
+        else
+        {jumpping = false; counter = 0;}
+        counter ++;
+    }
+    
+    if (forwarding)
+    {
+        yrotrad = (yrot / 180 * 3.141592654f);
+        xrotrad = (xrot / 180 * 3.141592654f);
+        xpos += float(0.1*sin(yrotrad));
+        zpos -= float(0.1*cos(yrotrad));
+    }
+    
+    if (backwarding)
+    {
+        yrotrad = (yrot / 180 * 3.141592654f);
+        xrotrad = (xrot / 180 * 3.141592654f);
+        xpos -= float(0.1*sin(yrotrad));
+        zpos += float(0.1*cos(yrotrad));
+    }
+    
+    if (leftshift)
+    {
+        yrotrad = (yrot / 180 * 3.141592654f);
+        xpos -= float(0.1*cos(yrotrad));
+        zpos -= float(0.1*sin(yrotrad));
+    }
+    
+    if (rightshift)
+    {
+        yrotrad = (yrot / 180 * 3.141592654f);
+        xpos += float(0.1*cos(yrotrad));
+        zpos += float(0.1*sin(yrotrad));
+    }
     glutPostRedisplay();
 }
 
@@ -427,6 +529,7 @@ void idle(void)
 void keyboard(unsigned char key, int x, int y)
 {
     int w = glutGetWindow();
+    float xrotrad, yrotrad;
     switch (key)
     {
         case 27:
@@ -435,12 +538,19 @@ void keyboard(unsigned char key, int x, int y)
             exit(0);
             break;
         case 'w':
-            g_rotateY += 2;
-            glutPostRedisplay();
+            forwarding = true;
             break;
         case 's':
-            g_rotateY -= 2;
-            glutPostRedisplay();
+            backwarding = true;
+            break;
+        case 'd':
+            rightshift = true;
+            break;
+        case 'a':
+            leftshift = true;
+            break;
+        case 32:
+            jumpping  = true;
             break;
         default:
             break;
@@ -448,31 +558,28 @@ void keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
-// arrow keys that are used to control the rotation of the object
-void arrowkeys( int key, int x, int y )
+void keyup(unsigned char key, int x, int y)
 {
-    switch (key) {
-        case GLUT_KEY_UP:							// If we hit the UP arrow key
-            g_zoom -= 1;
-            glutPostRedisplay();
+    switch (key)
+    {
+        case 'w':
+            forwarding = false;
             break;
-        case GLUT_KEY_DOWN:							// If we hit the DOWN arrow key
-            g_zoom += 1;
-            glutPostRedisplay();
+        case 's':
+            backwarding = false;
             break;
-        case GLUT_KEY_LEFT:							// If we hit the LEFT arrow key
-            g_rotateX -= 2;
-            glutPostRedisplay();
+        case 'a':
+            leftshift = false;
             break;
-        case GLUT_KEY_RIGHT:						// If we hit the RIGHT arrow key
-            g_rotateX += 2;
-            glutPostRedisplay();
+        case 'd':
+            rightshift = false;
             break;
         default:
             break;
     }
-    glutPostRedisplay();
 }
+
+
 
 // main function
 int main(int argc, char **argv)
@@ -484,8 +591,9 @@ int main(int argc, char **argv)
     glutFullScreen();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
-    glutSpecialFunc(arrowkeys);
+    glutKeyboardUpFunc(keyup);
     glutIdleFunc(idle);
+    glutPassiveMotionFunc(mouseMovement);
     init();
     
     glutMainLoop();
