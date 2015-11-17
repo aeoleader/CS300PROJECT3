@@ -58,17 +58,20 @@ GLUquadricObj *qobj;         // Pointer for quadric objects.
 
 // Bounding box
 struct BoundingBox {
-    int left;
-    int right;
-    int top;
-    int bottom;
-    int front;
-    int back;
+    float left;
+    float right;
+    float top;
+    float bottom;
+    float front;
+    float back;
     
-    BoundingBox(int _left=0, int _right=0, int _top=0, int _bottom=0, int _front=0, int _back=0): left(_left), right(_right), top(_top), bottom(_bottom), front(_front), back(_back) {}
+    BoundingBox(float _left=0, float _right=0, float _top=0, float _bottom=0, float _front=0, float _back=0): left(_left), right(_right), top(_top), bottom(_bottom), front(_front), back(_back) {}
 };
 
+vector<BoundingBox> objects;
+BoundingBox* buffer;
 
+int which_object = 2;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /************************** Texture Mapping Operations ******************************************/
 unsigned int g_Texture[MAX_TEXTURES] = {0};
@@ -81,6 +84,7 @@ bool forwarding = false;
 bool backwarding = false;
 bool leftshift = false;
 bool rightshift = false;
+bool falling = false;
 
 int counter = 0;
 void CreateTexture(unsigned int textureArray[], char * strFileName, int textureID)
@@ -345,17 +349,7 @@ void display(void)
     //    /******** End Lighting ********/
 
 
-    
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 90.0);
-    drawFloating(3.0);
-    glPopMatrix();
-    
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 104.0);
-    glRotatef(f_rotateY, 0.0, 1.0, 0.0);
-    drawFloating(9.0);
-    glPopMatrix();
+
     
   
     glPushMatrix();
@@ -383,17 +377,23 @@ void display(void)
     
     glPushMatrix();
     glTranslatef(0.0, -2.0, 90.0);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93);
+    objects.push_back(*buffer);
     drawFloating(3.0);
     glPopMatrix();
     
     glPushMatrix();
     glTranslatef(0.0, -2.0, 104.0);
-    glRotatef(f_rotateY, 0.0, 1.0, 0.0);
+    //glRotatef(f_rotateY, 0.0, 1.0, 0.0);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113);
+    objects.push_back(*buffer);
     drawFloating(9.0);
     glPopMatrix();
     
     glPushMatrix();
     glTranslatef(0.0, -2.0, 118.0);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121);
+    objects.push_back(*buffer);
     drawFloating(3.0);
     glPopMatrix();
     
@@ -412,8 +412,27 @@ void mouseMovement(int x, int y) {
     glutPostRedisplay();
 }
 
+
+void checkBounding(int x, int y)
+{
+    bool flag = false;
+    for (int i = 0; i < objects.size();i++)
+        if (x <= objects[i].right && x >= objects[i].left && y >= objects[i].front && y <= objects[i].back) flag = true;
+    if (!flag) falling = true;
+}
 // keyboard callback function
 
+void reset()
+{
+    xpos = 0;
+    ypos = 0;
+    zpos = 118;
+    falling = false;
+    xrot = 0;
+    yrot = 0;
+    glutPostRedisplay();
+    
+}
 void idle(void)
 {
     if (f_rotateY >= 45)
@@ -448,6 +467,7 @@ void idle(void)
         xrotrad = (xrot / 180 * 3.141592654f);
         xpos += float(0.1*sin(yrotrad));
         zpos -= float(0.1*cos(yrotrad));
+        if (!jumpping) checkBounding(xpos, zpos);
     }
     
     if (backwarding)
@@ -456,6 +476,7 @@ void idle(void)
         xrotrad = (xrot / 180 * 3.141592654f);
         xpos -= float(0.1*sin(yrotrad));
         zpos += float(0.1*cos(yrotrad));
+        checkBounding(xpos, zpos);
     }
     
     if (leftshift)
@@ -463,6 +484,7 @@ void idle(void)
         yrotrad = (yrot / 180 * 3.141592654f);
         xpos -= float(0.1*cos(yrotrad));
         zpos -= float(0.1*sin(yrotrad));
+        checkBounding(xpos, zpos);
     }
     
     if (rightshift)
@@ -470,8 +492,14 @@ void idle(void)
         yrotrad = (yrot / 180 * 3.141592654f);
         xpos += float(0.1*cos(yrotrad));
         zpos += float(0.1*sin(yrotrad));
+        checkBounding(xpos, zpos);
     }
-
+    
+    if (falling)
+    {
+        ypos -= 0.3;
+        if (ypos < -20) reset();
+    }
     glutPostRedisplay();
 }
 
@@ -533,8 +561,6 @@ void keyup(unsigned char key, int x, int y)
             break;
     }
 }
-
-
 
 // main function
 int main(int argc, char **argv)
