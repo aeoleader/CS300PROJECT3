@@ -10,6 +10,7 @@
 		C58F79E41BF40E950086E651 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C58F79E31BF40E950086E651 /* main.cpp */; };
 		C58F79EB1BF40ED10086E651 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C58F79EA1BF40ED10086E651 /* OpenGL.framework */; };
 		C58F79ED1BF40ED80086E651 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C58F79EC1BF40ED80086E651 /* GLUT.framework */; };
+		C59E88CA1BFADDF7001748CD /* tgaClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C59E88C81BFADDF7001748CD /* tgaClass.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +30,8 @@
 		C58F79E31BF40E950086E651 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C58F79EA1BF40ED10086E651 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		C58F79EC1BF40ED80086E651 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		C59E88C81BFADDF7001748CD /* tgaClass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tgaClass.cpp; sourceTree = "<group>"; };
+		C59E88C91BFADDF7001748CD /* tgaClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tgaClass.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +69,8 @@
 			isa = PBXGroup;
 			children = (
 				C58F79E31BF40E950086E651 /* main.cpp */,
+				C59E88C81BFADDF7001748CD /* tgaClass.cpp */,
+				C59E88C91BFADDF7001748CD /* tgaClass.h */,
 			);
 			path = CS300PROJECT3;
 			sourceTree = "<group>";
@@ -127,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C58F79E41BF40E950086E651 /* main.cpp in Sources */,
+				C59E88CA1BFADDF7001748CD /* tgaClass.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +253,7 @@
 				C58F79E91BF40E950086E651 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
