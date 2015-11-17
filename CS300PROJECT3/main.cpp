@@ -78,7 +78,7 @@ unsigned int g_Texture[MAX_TEXTURES] = {0};
 
 float lastx, lasty;
 
-float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
+float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 130, angle = 0.0, rx = 0, ry = 0, rz = 0;
 bool jumpping = false;
 bool forwarding = false;
 bool backwarding = false;
@@ -391,8 +391,8 @@ void display(void)
     glPopMatrix();
     
     glPushMatrix();
-    glTranslatef(0.0, -2.0, 118.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121);
+    glTranslatef(0.0, -2.0, 130.0);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 127, 133);
     objects.push_back(*buffer);
     drawFloating(3.0);
     glPopMatrix();
@@ -426,7 +426,7 @@ void reset()
 {
     xpos = 0;
     ypos = 0;
-    zpos = 118;
+    zpos = 130;
     falling = false;
     xrot = 0;
     yrot = 0;
