@@ -145,6 +145,7 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 // Initialize OpenGL graphics
 void init(void)
 {
@@ -155,68 +156,66 @@ void init(void)
     gluPerspective(60.0,(GLfloat)width/(GLfloat)height, 0.1, 300);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    
+    glutSetCursor(GLUT_CURSOR_NONE);
+    glutWarpPointer( SCREEN_WIDTH/2 , SCREEN_HEIGHT/2);
     CreateTexture(g_Texture, "Sky.tga", 0);			// Load our texture for the sky
     CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
     CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
     
-    //@Xiangyu Li
-    glutSetCursor(GLUT_CURSOR_NONE);
-    glutWarpPointer( SCREEN_WIDTH/2 , SCREEN_HEIGHT/2);
     
     glClearColor(1, 1, 1, 1);           // White background
     glShadeModel (GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);            // turn on the depth buffer
 }
 
-void drawBackground(void)
+void drawBackground(float length)
 {
-//    glEnable(GL_TEXTURE_2D);
-    //glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
     
-    // Display a 2D quad with the sky texture.
-    glColor3f(1.0, 0.0, 0.0);
-    GLfloat width = 50.0;
+    // Top face (y = length)
     glBegin(GL_QUADS);
-    // Top face (y = 10.0f)
-    glVertex3f( width,  40.0f, -width);
-    glVertex3f(-width,  40.0f, -width);
-    glVertex3f(-width,  40.0f,  width);
-    glVertex3f( width,  40.0f,  width);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length, -length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length, -length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length,  length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length,  length);
+    glEnd();
     
-    // Bottom face (y = -30.0f)
-    glVertex3f( width, -50.0f, -width);
-    glVertex3f(-width, -50.0f, -width);
-    glVertex3f(-width, -50.0f,  width);
-    glVertex3f( width, -50.0f,  width);
     
-    // Front face (z = widthf)
-    glVertex3f( width,  40.0f,  width);
-    glVertex3f(-width,  40.0f,  width);
-    glVertex3f(-width, -50.0f,  width);
-    glVertex3f( width, -50.0f,  width);
+    glBegin(GL_QUADS);
+    // Bottom face (y = -length)
+    glVertex3f( length, -length, -length);
+    glVertex3f(-length, -length, -length);
+    glVertex3f(-length, -length,  length);
+    glVertex3f( length, -length,  length);
     
-    // Back face (z = -widthf)
-    glVertex3f( width, -50.0f, -width);
-    glVertex3f(-width, -50.0f, -width);
-    glVertex3f(-width,  40.0f, -width);
-    glVertex3f( width,  40.0f, -width);
+    // Front face (z = length)
+    glVertex3f( length,  length,  length);
+    glVertex3f(-length,  length,  length);
+    glVertex3f(-length, -length,  length);
+    glVertex3f( length, -length,  length);
     
-    // Left face (x = -widthf)
-    glVertex3f(-width,  40.0f,  width);
-    glVertex3f(-width,  40.0f, -width);
-    glVertex3f(-width, -50.0f, -width);
-    glVertex3f(-width, -50.0f,  width);
+    // Back face (z = -length)
+    glVertex3f( length, -length, -length);
+    glVertex3f(-length, -length, -length);
+    glVertex3f(-length,  length, -length);
+    glVertex3f( length,  length, -length);
     
-    // Right face (x = width)
-    glVertex3f( width,  40.0f, -width);
-    glVertex3f( width,  40.0f,  width);
-    glVertex3f( width, -50.0f,  width);
-    glVertex3f( width, -50.0f, -width);
+    // Left face (x = -length)
+    glVertex3f(-length,  length,  length);
+    glVertex3f(-length,  length, -length);
+    glVertex3f(-length, -length, -length);
+    glVertex3f(-length, -length,  length);
+    
+    // Right face (x = length)
+    glVertex3f( length,  length, -length);
+    glVertex3f( length,  length,  length);
+    glVertex3f( length, -length,  length);
+    glVertex3f( length, -length, -length);
     // Stop drawing
     glEnd();
-//    glDisable(GL_TEXTURE_2D);
-    glColor3f(1.0, 1.0, 1.0);
+    
+    glDisable(GL_TEXTURE_2D);
 }
 
 void drawFloating(float mag)  // multiples of 3
@@ -228,24 +227,16 @@ void drawFloating(float mag)  // multiples of 3
     for (int i = -mag; i < mag; i+=6.0)
     {
         // Top face (y = 0.5f)
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f( 3.0f, 0.5f, i);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex3f(-3.0f, 0.5f, i);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex3f(-3.0f, 0.5f, i+6.0);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f( 3.0f, 0.5f, i+6.0);
+        glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, 0.5f, i);
+        glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, 0.5f, i);
+        glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, 0.5f, i+6.0);
+        glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, 0.5f, i+6.0);
         
         // Bottom face (y = -0.5f)
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f( 3.0f, -0.5f, i);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex3f(-3.0f, -0.5f, i);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex3f(-3.0f, -0.5f, i+6.0);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f( 3.0f, -0.5f, i+6.0);
+        glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, i);
+        glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, i);
+        glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, i+6.0);
+        glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, i+6.0);
     }
     glEnd();
     
@@ -253,44 +244,28 @@ void drawFloating(float mag)  // multiples of 3
     glBindTexture(GL_TEXTURE_2D,  g_Texture[2]);    // Floating texture
     glBegin(GL_QUADS);
     // Front face  (z = 0.5f)
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f( 3.0f,  0.5f, mag);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-3.0f,  0.5f, mag);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(-3.0f, -0.5f, mag);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f( 3.0f, -0.5f, mag);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f,  0.5f, mag);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f,  0.5f, mag);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, mag);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, mag);
     
     // Back face (z = -0.5f)
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f( 3.0f, -0.5f, -mag);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-3.0f, -0.5f, -mag);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(-3.0f,  0.5f, -mag);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f( 3.0f,  0.5f, -mag);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, -mag);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, -mag);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f,  0.5f, -mag);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f,  0.5f, -mag);
     
     // Left face (x = -0.5f)
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-3.0f,  0.5f,  mag);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-3.0f,  0.5f, -mag);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(-3.0f, -0.5f, -mag);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(-3.0f, -0.5f,  mag);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f(-3.0f,  0.5f,  mag);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f,  0.5f, -mag);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, -mag);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f(-3.0f, -0.5f,  mag);
     
     // Right face (x = 0.5f)
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(3.0f,  0.5f, -mag);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(3.0f,  0.5f,  mag);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(3.0f, -0.5f,  mag);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(3.0f, -0.5f, -mag);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f(3.0f,  0.5f, -mag);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(3.0f,  0.5f,  mag);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(3.0f, -0.5f,  mag);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f(3.0f, -0.5f, -mag);
     glEnd();  // End of drawing color-cube
     glColor3f(1.0f, 1.0f, 1.0f);
 }
@@ -300,6 +275,7 @@ void camera()
     glRotatef(xrot, 1, 0, 0);
     glRotatef(yrot, 0, 1, 0);
     //gluLookAt(xpos, ypos, zpos, xrot, yrot, 0, 1, 1, 0);
+    
     glTranslatef(-xpos, -ypos, -zpos);
 }
 
@@ -330,7 +306,7 @@ void drawTower()
     glutSolidCone(4.0,9.0,17.0,10.0);
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
-
+    
 }
 
 //creates floating teapots in the sky
@@ -362,7 +338,7 @@ void drawTeapots(void)
     
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
-
+    
 }
 
 //creates obstacles on the floating blocks (cones)
@@ -395,17 +371,17 @@ void display(void)
     
     camera();
     
-    //    /******** Lighting Settings ********/
+    /******** Lighting Settings ********/
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    //
+    
     glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
     glMaterialf(GL_FRONT, GL_SHININESS, 100);
     glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    //
+    
     glEnable(GL_COLOR_MATERIAL);
     //    /******** End Lighting ********/
 
@@ -445,11 +421,10 @@ void display(void)
     
     glPushMatrix();
     glTranslatef(0.0, -2.0, 104.0);
-    //glRotatef(f_rotateY, 0.0, 1.0, 0.0);
+    glRotatef(f_rotateY, 0.0, 1.0, 0.0);
     buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113);
     floors.push_back(*buffer);
     drawFloating(9.0);
-    drawObstacle();
     glPopMatrix();
     
     glPushMatrix();
@@ -460,13 +435,14 @@ void display(void)
     glPopMatrix();
     
     glPushMatrix();
-    glTranslatef(0.0, -2.0, 104.0);
-    drawBackground();
+    glTranslatef(0.0, -22.0, 104.0);
+    drawBackground(50.0);
     glPopMatrix();
     
-    //glColor3f(1.0f, 1.0f, 1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
     glutSwapBuffers();
 }
+
 
 void mouseMovement(int x, int y) {
     int diffx=x-lastx; //check the difference between the current x and the last x position
@@ -576,6 +552,7 @@ void idle(void)
  *  'w'  -  look up
  *  's'  -  look down
  */
+
 void keyboard(unsigned char key, int x, int y)
 {
     int w = glutGetWindow();
