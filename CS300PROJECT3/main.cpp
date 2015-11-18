@@ -39,7 +39,7 @@ GLfloat cyan[] = { 0.0, 1.0, 1.0, 1.0 };
 GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0}; // black ambient light
 GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0}; // white diffuse light
 GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};// white specular light
-GLfloat light_pos[] = { 0.3, 0.2, 0.6, 0.0 };
+GLfloat light_pos[] = { 0.0, 5.0, -3.0, 0.0 };
 
 // This is our camera rotation degree
 GLfloat g_rotateX = 0, g_rotateY = 0;
