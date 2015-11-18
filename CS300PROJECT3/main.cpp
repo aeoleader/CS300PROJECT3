@@ -30,7 +30,7 @@ GLUquadricObj *obj; //creates a glu quadric object
 const GLint SCREEN_WIDTH = 800;      // window dimensions
 const GLint SCREEN_HEIGHT = 600;
 
-const int MAX_TEXTURES = 6;
+const int MAX_TEXTURES = 3;          // number of textures
 
 GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };  // no material property
 GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
@@ -48,14 +48,17 @@ GLfloat f_rotateY = 0; //holds the rotation along y-axis for the block
 GLfloat rotateYtea = 0; //holds rotation of teapots along y-axis
 bool f_turn = false; //turning the camera
 
-/////// @Pratshita /////////////
-GLfloat trans_y = 0;
-/////////////////////////////////
-
-/////// @Xiangyu Li /////////////
 float lastx, lasty;
 
-float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
+//camera rotation
+float xrot = 0, yrot = -90;
+
+//initial camera position
+float xpos = 0, ypos = 0, zpos = 118;
+
+float angle = 0.0, rx = 0, ry = 0, rz = 0;
+
+//movements of the first person navigation in the game
 bool jumpping = false;
 bool forwarding = false;
 bool backwarding = false;
@@ -64,7 +67,6 @@ bool rightshift = false;
 bool falling = false;
 
 int counter = 0;
-/////////////////////////////////
 
 // This holds the zoom value of our scope
 GLfloat g_zoom = 120;
@@ -131,8 +133,6 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 }
 /************************** Texture Mapping Operations ******************************************/
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 // Initialize OpenGL graphics
@@ -151,60 +151,58 @@ void init(void)
     CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
     CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
     
-    
     glClearColor(1, 1, 1, 1);           // White background
     glShadeModel (GL_SMOOTH);           // OpenGL shade model is set to GL_SMOOTH
     glEnable(GL_DEPTH_TEST);            // turn on the depth buffer
 }
 
+//this function draws the background of the world using GL_QUADS
+//the world is bounded by bounding box and the texture is applied to the top of the box, which is the sky
 void drawBackground(float length)
 {
-    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D); //enable texture
     glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);    // Sky texture
     
     // Top face (y = length)
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length, -length);
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length, -length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length,  length);
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length,  length);
-    glEnd();
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length, -1.5*length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length, -1.5*length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length,  1.5*length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length,  1.5*length);
     
-    
-    glBegin(GL_QUADS);
     // Bottom face (y = -length)
-    glVertex3f( length, -length, -length);
-    glVertex3f(-length, -length, -length);
-    glVertex3f(-length, -length,  length);
-    glVertex3f( length, -length,  length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -1.5*length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -1.5*length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  1.5*length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  1.5*length);
     
     // Front face (z = length)
-    glVertex3f( length,  length,  length);
-    glVertex3f(-length,  length,  length);
-    glVertex3f(-length, -length,  length);
-    glVertex3f( length, -length,  length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length,  1.5*length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length,  1.5*length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  1.5*length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  1.5*length);
     
     // Back face (z = -length)
-    glVertex3f( length, -length, -length);
-    glVertex3f(-length, -length, -length);
-    glVertex3f(-length,  length, -length);
-    glVertex3f( length,  length, -length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -1.5*length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -1.5*length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length, -1.5*length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length, -1.5*length);
     
     // Left face (x = -length)
-    glVertex3f(-length,  length,  length);
-    glVertex3f(-length,  length, -length);
-    glVertex3f(-length, -length, -length);
-    glVertex3f(-length, -length,  length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f(-length,  length,  1.5*length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f(-length,  length, -1.5*length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -1.5*length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  1.5*length);
     
     // Right face (x = length)
-    glVertex3f( length,  length, -length);
-    glVertex3f( length,  length,  length);
-    glVertex3f( length, -length,  length);
-    glVertex3f( length, -length, -length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f( length,  length, -1.5*length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f( length,  length,  1.5*length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  1.5*length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -1.5*length);
     // Stop drawing
     glEnd();
     
-    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D); //texture is disabled
 }
 
 //this function draws floating blocks in the scene
@@ -232,7 +230,6 @@ void drawFloating(float mag)  // multiples of 3
     }
     glEnd();
     
-    //glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D,  g_Texture[2]);    // Floating texture
     glBegin(GL_QUADS);
     // Front face  (z = 0.5f)
@@ -259,9 +256,12 @@ void drawFloating(float mag)  // multiples of 3
     glTexCoord2f(1.0f, 1.0f);   glVertex3f(3.0f, -0.5f,  mag);
     glTexCoord2f(1.0f, 0.0f);   glVertex3f(3.0f, -0.5f, -mag);
     glEnd();  // End of drawing color-cube
+    
+    glDisable(GL_TEXTURE_2D);
     glColor3f(1.0f, 1.0f, 1.0f);
 }
 
+//this function rotates the camera
 void camera()
 {
     glRotatef(xrot, 1, 0, 0);
@@ -271,7 +271,7 @@ void camera()
     glTranslatef(-xpos, -ypos, -zpos);
 }
 
-//creates tall towers
+//creates tall towers using glut 3D analytical objects and makes use of push and pop matrices
 void drawTower()
 {
     obj = gluNewQuadric(); //creates a new quadric object
@@ -364,9 +364,9 @@ void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    camera();
+    camera(); //envoke camera() function
     
-    /******** Lighting Settings ********/
+    /*********************** Lighting Settings ************************/
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     
@@ -378,11 +378,11 @@ void display(void)
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     
     glEnable(GL_COLOR_MATERIAL);
-    /******** End Lighting ********/
+    /************************** End Lighting *************************/
     
-    drawTeapots();
+    drawTeapots(); //draws teapots
     
-    //obstacles on the first block
+    /*************** draw obstacles on the first block ***************/
     glPushMatrix();
     glTranslatef(0.0,-2.0,107.0);
     glTranslatef(-1.85,0.0,9.0);
@@ -414,6 +414,7 @@ void display(void)
     /***************************************************************/
     
     
+    /***************** Draws floating objects *********************/
     glPushMatrix();
     glTranslatef(0.0, -2.0, 90.0);
     buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93); //create a new bounding box for the block
@@ -424,7 +425,7 @@ void display(void)
     glPushMatrix();
     glTranslatef(0.0, -2.0, 104.0);
     glRotatef(f_rotateY, 0.0, 1.0, 0.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113); //create a new bounding box for the block
     objects.push_back(*buffer);
     drawFloating(9.0);
     glPopMatrix();
@@ -443,16 +444,12 @@ void display(void)
     drawBackground(50.0);
     glPopMatrix();
     
-    glPushMatrix();
-    glTranslatef(0.0, -22.0, 104.0);
-    drawBackground(50.0);
-    glPopMatrix();
-    
     glColor3f(1.0f, 1.0f, 1.0f);
     glutSwapBuffers();
 }
 
-
+//function that handles mouse movements
+//takes two parameters, x and y, that are the position of the mouse on the screen
 void mouseMovement(int x, int y) {
     int diffx=x-lastx; //check the difference between the current x and the last x position
     int diffy=y-lasty; //check the difference between the y and the last y position
@@ -484,6 +481,11 @@ void reset()
     glutPostRedisplay();
     
 }
+
+//idle function keeps calling events when there are no other events in the event queue
+//the middle block keeps rotating halfway
+//the teapots are in a constant loops of rotation
+//jumping action of the camera
 void idle(void)
 {
     //rotation of middle block
@@ -497,7 +499,7 @@ void idle(void)
     else
         f_rotateY -= 0.8;
     
-    rotateYtea += -0.25;
+    rotateYtea += -0.25; //rotation of teapots
     
     float rate = 0.2;
     float xrotrad, yrotrad;
@@ -564,12 +566,8 @@ void idle(void)
     glutPostRedisplay();
 }
 
-/*  key *** function
- *  esc  -  exit the application
- *  'w'  -  look up
- *  's'  -  look down
- */
-
+//keyboard callback function
+//this function deals with commands when the keys are pressed down
 void keyboard(unsigned char key, int x, int y)
 {
     int w = glutGetWindow();
@@ -581,19 +579,19 @@ void keyboard(unsigned char key, int x, int y)
             glDeleteTextures((GLsizei)MAX_TEXTURES, (GLuint *)g_Texture);
             exit(0);
             break;
-        case 'w':
+        case 'w': //move forward
             forwarding = true;
             break;
-        case 's':
+        case 's': //move backward
             backwarding = true;
             break;
-        case 'd':
+        case 'd': //move right
             rightshift = true;
             break;
-        case 'a':
+        case 'a': //move left
             leftshift = true;
             break;
-        case 32:
+        case 32: //spacebar to jump
             jumpping  = true;
             break;
         default:
@@ -602,20 +600,22 @@ void keyboard(unsigned char key, int x, int y)
     glutPostRedisplay(); //call glutPostRedisplay function
 }
 
+//keyboard callback function
+//this function deals with commands when the keys are not pressed
 void keyup(unsigned char key, int x, int y)
 {
     switch (key)
     {
-        case 'w':
+        case 'w': //move forward is set to false
             forwarding = false;
             break;
-        case 's':
+        case 's': //move backward is set to false
             backwarding = false;
             break;
-        case 'a':
+        case 'a': //move left is set to false
             leftshift = false;
             break;
-        case 'd':
+        case 'd': //move right is set to false
             rightshift = false;
             break;
         default:
