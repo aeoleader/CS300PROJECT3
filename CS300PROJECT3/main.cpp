@@ -48,32 +48,29 @@ GLfloat f_rotateY = 0; //holds the rotation along y-axis for the block
 GLfloat rotateYtea = 0; //holds rotation of teapots along y-axis
 bool f_turn = false; //turning the camera
 
+//movements of the first person navigation in the game
 float lastx, lasty;
 
 //camera rotation
-float xrot = 0, yrot = -90;
+float xrot = 0, yrot = 90;
 
 //initial camera position
-float xpos = 0, ypos = 0, zpos = 118;
+float xpos = 0, ypos = 0, zpos = 0, angle = 0.0, rx = 0, ry = 0, rz = 0;
 
-float angle = 0.0, rx = 0, ry = 0, rz = 0;
-
-//movements of the first person navigation in the game
 bool jumpping = false;
 bool forwarding = false;
 bool backwarding = false;
 bool leftshift = false;
 bool rightshift = false;
 bool falling = false;
+bool collide = false;
 
 int counter = 0;
 
 // This holds the zoom value of our scope
-GLfloat g_zoom = 120;
+GLfloat g_zoom = 50;
 
-GLUquadricObj *qobj;         // Pointer for quadric objects.
-
-// Bounding box
+// Bounding box structure
 struct BoundingBox {
     float left;
     float right;
@@ -85,10 +82,10 @@ struct BoundingBox {
     BoundingBox(float _left=0, float _right=0, float _top=0, float _bottom=0, float _front=0, float _back=0): left(_left), right(_right), top(_top), bottom(_bottom), front(_front), back(_back) {}
 };
 
-vector<BoundingBox> objects; //store the information from the BoundingBox struct in a vector
-BoundingBox* buffer; //pointer
-
-int which_object = 2;
+vector<BoundingBox> floors;         // store the bounding boxes for floating objects
+vector<BoundingBox> obs;            // store the bounding boxes for obstacles
+BoundingBox* buffer;                // bounding box pointer
+float floatingCoordinate[20][3];    // store the coordinates for random generated floating objects
 
 /************************** Texture Mapping Operations ******************************************/
 unsigned int g_Texture[MAX_TEXTURES] = {0};
@@ -134,6 +131,38 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
 }
 /************************** Texture Mapping Operations ******************************************/
 
+// Generate coordinates for random floating objects
+void generateRandomFloatingCoordinate()
+{
+    int counter = 1;
+    float x, y, z;
+    bool flag;
+    floatingCoordinate[0][0] = 0;
+    floatingCoordinate[0][1] = -2;
+    floatingCoordinate[0][2] = 0;
+    while (counter < 20)
+    {
+        x = rand() % 80;
+        z = rand() % 80;
+        flag = false;
+        for (int i = 0; i < counter; i++)
+            if (sqrt((floatingCoordinate[i][0] - x)*(floatingCoordinate[i][0] - x)+(floatingCoordinate[i][2] - z)*(floatingCoordinate[i][2] - z)) <= 8.5)
+            {
+                flag = true;
+                break;
+            }
+        if (!flag)
+            for (int i = 0; i < counter; i++)
+                if (sqrt((floatingCoordinate[i][0] - x)*(floatingCoordinate[i][0] - x)+(floatingCoordinate[i][2] - z)*(floatingCoordinate[i][2] - z)) <= 12)
+                {
+                    floatingCoordinate[counter][0] = x;
+                    floatingCoordinate[counter][1] = -2;
+                    floatingCoordinate[counter][2] = z;
+                    counter++;
+                    break;
+                }
+    }
+}
 
 // Initialize OpenGL graphics
 void init(void)
@@ -151,6 +180,7 @@ void init(void)
     CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
     CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
     
+    generateRandomFloatingCoordinate();
     glClearColor(1, 1, 1, 1);           // White background
     glShadeModel (GL_SMOOTH);           // OpenGL shade model is set to GL_SMOOTH
     glEnable(GL_DEPTH_TEST);            // turn on the depth buffer
@@ -165,40 +195,40 @@ void drawBackground(float length)
     
     // Top face (y = length)
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length, -1.5*length);
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length, -1.5*length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length,  1.5*length);
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length,  1.5*length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length, -length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length, -length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length,  length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length,  length);
     
     // Bottom face (y = -length)
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -1.5*length);
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -1.5*length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  1.5*length);
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  1.5*length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  length);
     
     // Front face (z = length)
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length,  1.5*length);
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length,  1.5*length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  1.5*length);
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  1.5*length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length,  length,  length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length,  length,  length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  length);
     
     // Back face (z = -length)
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -1.5*length);
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -1.5*length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length, -1.5*length);
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length, -1.5*length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length, -length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length, -length);
     
     // Left face (x = -length)
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f(-length,  length,  1.5*length);
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f(-length,  length, -1.5*length);
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -1.5*length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  1.5*length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f(-length,  length,  length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f(-length,  length, -length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-length, -length, -length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length, -length,  length);
     
     // Right face (x = length)
-    glTexCoord2f(0.0f, 1.0f);   glVertex3f( length,  length, -1.5*length);
-    glTexCoord2f(1.0f, 1.0f);   glVertex3f( length,  length,  1.5*length);
-    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  1.5*length);
-    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -1.5*length);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f( length,  length, -length);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f( length,  length,  length);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( length, -length,  length);
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( length, -length, -length);
     // Stop drawing
     glEnd();
     
@@ -213,21 +243,17 @@ void drawFloating(float mag)  // multiples of 3
     glEnable(GL_TEXTURE_2D); //enable texture
     glBindTexture(GL_TEXTURE_2D,  g_Texture[1]);    // Floating texture
     glBegin(GL_QUADS);                // Begin drawing the object with 6 quads
+    // Top face (y = 0.5f)
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, 0.5f, -mag);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, 0.5f, -mag);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, 0.5f,  mag);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, 0.5f,  mag);
     
-    for (int i = -mag; i < mag; i+=6.0)
-    {
-        // Top face (y = 0.5f)
-        glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, 0.5f, i);
-        glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, 0.5f, i);
-        glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, 0.5f, i+6.0);
-        glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, 0.5f, i+6.0);
-        
-        // Bottom face (y = -0.5f)
-        glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, i);
-        glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, i);
-        glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, i+6.0);
-        glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, i+6.0);
-    }
+    // Bottom face (y = -0.5f)
+    glTexCoord2f(0.0f, 0.0f);   glVertex3f( 3.0f, -0.5f, -mag);
+    glTexCoord2f(0.0f, 1.0f);   glVertex3f(-3.0f, -0.5f, -mag);
+    glTexCoord2f(1.0f, 1.0f);   glVertex3f(-3.0f, -0.5f,  mag);
+    glTexCoord2f(1.0f, 0.0f);   glVertex3f( 3.0f, -0.5f,  mag);
     glEnd();
     
     glBindTexture(GL_TEXTURE_2D,  g_Texture[2]);    // Floating texture
@@ -306,7 +332,7 @@ void drawTower()
 void drawTeapots(void)
 {
     glPushMatrix();
-    glTranslatef(0.0,0.85,100.0);
+    glTranslatef(5.0, 2, 8.0);
     glColor3f(0.5, 0.0, 0.0);
     glRotatef(rotateYtea, 0.0, 1.0, 0.0);
     glutSolidTeapot(0.25);
@@ -335,9 +361,12 @@ void drawTeapots(void)
 }
 
 //creates obstacles on the floating blocks (cones)
-void drawObstacle(void)
+void drawObstacle(float x, float y, float z)
 {
     glPushMatrix();
+    glTranslatef(x, y, z);
+    buffer = new BoundingBox(x-0.8, x+0.8, y+1.75, y, z-0.8, z+0.8);
+    obs.push_back(*buffer);
     glColor3f(0.0, 0.5, 0.0);
     glRotatef(-90,1.0,0.0,0.0);
     glutSolidCone(0.5,1.75,5.0,5.0); //draw solid cone
@@ -364,6 +393,9 @@ void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
+    floors.clear();
+    obs.clear();
+    
     camera(); //envoke camera() function
     
     /*********************** Lighting Settings ************************/
@@ -382,23 +414,6 @@ void display(void)
     
     drawTeapots(); //draws teapots
     
-    /*************** draw obstacles on the first block ***************/
-    glPushMatrix();
-    glTranslatef(0.0,-2.0,107.0);
-    glTranslatef(-1.85,0.0,9.0);
-    drawObstacle();
-    glTranslatef(3.7,0.0,0.0);
-    drawObstacle();
-    glPopMatrix();
-    
-    /*************** draw obstacles on the final block ***************/
-    glPushMatrix();
-    glTranslatef(-1.85,-2.0,89.0);
-    drawObstacle();
-    glTranslatef(3.7,0.0,0.0);
-    drawObstacle();
-    glPopMatrix();
-    
     /************************** Draws two towers *********************/
     glPushMatrix();
     glTranslatef(-40.0,0.0,50.0);
@@ -415,33 +430,36 @@ void display(void)
     
     
     /***************** Draws floating objects *********************/
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 90.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93); //create a new bounding box for the block
-    objects.push_back(*buffer);
-    drawFloating(3.0);
-    glPopMatrix();
+    //draw floating floors
+    float x = 0;
+    float y = -2;
+    float z = 0;
+    float gap = 4;
     
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 104.0);
-    glRotatef(f_rotateY, 0.0, 1.0, 0.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113); //create a new bounding box for the block
-    objects.push_back(*buffer);
-    drawFloating(9.0);
-    glPopMatrix();
+    for (int i = 0; i < 20; i++)
+    {
+        x =floatingCoordinate[i][0];
+        y =floatingCoordinate[i][1];
+        z =floatingCoordinate[i][2];
+        glPushMatrix();
+        glTranslatef(x, y, z);
+        if (i%2 == 0) glRotatef(f_rotateY, 0.0, 1.0, 0.0);
+        buffer = new BoundingBox(x-3, x+3, -1.5, -2.5, z-3, z+3);
+        floors.push_back(*buffer);
+        drawFloating(3.0);
+        glPopMatrix();
+    }
     
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 118.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121); //create a new bounding box for the block
-    objects.push_back(*buffer);
-    drawFloating(3.0);
-    glPopMatrix();
+    /*************** draw obstacles on the some blocks ***************/
+    drawObstacle(floatingCoordinate[2][0], floatingCoordinate[2][1], floatingCoordinate[2][2]);
+    drawObstacle(floatingCoordinate[7][0], floatingCoordinate[7][1], floatingCoordinate[7][2]);
+    drawObstacle(floatingCoordinate[10][0], floatingCoordinate[10][1], floatingCoordinate[10][2]);
+    
     /***************************************************************/
     
     //draw background
     glPushMatrix();
-    glTranslatef(0.0, -22.0, 104.0);
-    drawBackground(50.0);
+    drawBackground(100.0);
     glPopMatrix();
     
     glColor3f(1.0f, 1.0f, 1.0f);
@@ -460,13 +478,29 @@ void mouseMovement(int x, int y) {
     glutPostRedisplay();
 }
 
-//this function checks for the bounding area
+//this function checks for the bounding area for floating objects
 void checkBounding(int x, int y)
 {
     bool flag = false;
-    for (int i = 0; i < objects.size();i++)
-        if (x <= objects[i].right && x >= objects[i].left && y >= objects[i].front && y <= objects[i].back) flag = true;
+    for (int i = 0; i < floors.size();i++)
+        if (x <= floors[i].right && x >= floors[i].left && y >= floors[i].front && y <= floors[i].back)
+            flag = true;
+
     if (!flag) falling = true;
+}
+
+//this function checks for the bounding area for obstacles
+void checkObstacle(int x, int y)
+{
+    bool flag = false;
+    for (int i = 0; i < obs.size();i++)
+        if (x <= obs[i].right && x >= obs[i].left && y >= obs[i].front && y <= obs[i].back)
+            flag = true;
+
+    if (flag)
+        collide = true;
+    else
+        collide = false;
 }
 
 //when you fall from the blocks, this functions gets you back to the starting point and you can start the game all over again
@@ -474,12 +508,12 @@ void reset()
 {
     xpos = 0;
     ypos = 0;
-    zpos = 118;
+    zpos = 0;
     falling = false;
+    collide = false;
     xrot = 0;
     yrot = 0;
     glutPostRedisplay();
-    
 }
 
 //idle function keeps calling events when there are no other events in the event queue
@@ -488,7 +522,6 @@ void reset()
 //jumping action of the camera
 void idle(void)
 {
-    //rotation of middle block
     if (f_rotateY >= 45)
         f_turn = !f_turn;
     else if (f_rotateY <= -45)
@@ -499,70 +532,109 @@ void idle(void)
     else
         f_rotateY -= 0.8;
     
-    rotateYtea += -0.25; //rotation of teapots
+    rotateYtea += -0.25;
     
     float rate = 0.2;
-    float xrotrad, yrotrad;
-    
-    //if spacebar is pressed
+    float yrotrad;
+//    float xrotrad;
     if (jumpping)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
-        xrotrad = (xrot / 180 * 3.141592654f);
+//        xrotrad = (xrot / 180 * 3.141592654f);
         xpos += float(0.1*sin(yrotrad)) ;
         zpos -= float(0.1*cos(yrotrad)) ;
         
         if (counter < 20) ypos += rate;
         else if (counter < 39) ypos -= rate;
         else
-        {jumpping = false; counter = 0;}
+        {
+            jumpping = false;
+            counter = 0;
+            checkBounding(xpos, zpos);
+            checkObstacle(xpos, zpos);
+        }
         counter ++;
     }
     
-    //if the camera is moving forward
     if (forwarding)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
-        xrotrad = (xrot / 180 * 3.141592654f);
+//        xrotrad = (xrot / 180 * 3.141592654f);
         xpos += float(0.1*sin(yrotrad));
         zpos -= float(0.1*cos(yrotrad));
-        if (!jumpping) checkBounding(xpos, zpos);
+        if (!jumpping)
+        {
+            checkBounding(xpos, zpos);
+            if (!falling)
+            {
+                checkObstacle(xpos, zpos);
+                if (collide)
+                {
+                    xpos -= float(0.1*sin(yrotrad));
+                    zpos += float(0.1*cos(yrotrad));
+                }
+            }
+        }
     }
     
-    //if the camera is moving backward
     if (backwarding)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
-        xrotrad = (xrot / 180 * 3.141592654f);
+//        xrotrad = (xrot / 180 * 3.141592654f);
         xpos -= float(0.1*sin(yrotrad));
         zpos += float(0.1*cos(yrotrad));
         checkBounding(xpos, zpos);
+        if (!falling)
+        {
+            checkObstacle(xpos, zpos);
+            if (collide)
+            {
+                xpos += float(0.1*sin(yrotrad));
+                zpos -= float(0.1*cos(yrotrad));
+            }
+        }
     }
     
-    //if the camera is moving left
     if (leftshift)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
         xpos -= float(0.1*cos(yrotrad));
         zpos -= float(0.1*sin(yrotrad));
         checkBounding(xpos, zpos);
+        if (!falling)
+        {
+            checkObstacle(xpos, zpos);
+            if (collide)
+            {
+                xpos += float(0.1*sin(yrotrad));
+                zpos += float(0.1*cos(yrotrad));
+            }
+        }
     }
     
-    //if the camera is moving left
     if (rightshift)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
         xpos += float(0.1*cos(yrotrad));
         zpos += float(0.1*sin(yrotrad));
         checkBounding(xpos, zpos);
+        if (!falling)
+        {
+            checkObstacle(xpos, zpos);
+            if (collide)
+            {
+                xpos -= float(0.1*sin(yrotrad));
+                zpos -= float(0.1*cos(yrotrad));
+            }
+        }
     }
     
-    //if you fall from the floating blocks
     if (falling)
     {
         ypos -= 0.3;
-        if (ypos < -20) reset();
+        if (ypos < -50) reset();
     }
+    
     glutPostRedisplay();
 }
 
