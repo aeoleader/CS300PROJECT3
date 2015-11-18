@@ -81,7 +81,7 @@ unsigned int g_Texture[MAX_TEXTURES] = {0};
 
 float lastx, lasty;
 
-float xrot = 0, yrot = -90, xpos = 0, ypos = 0, zpos = 118, angle = 0.0, rx = 0, ry = 0, rz = 0;
+float xrot = 0, yrot = 90, xpos = 0, ypos = 0, zpos = 0, angle = 0.0, rx = 0, ry = 0, rz = 0;
 bool jumpping = false;
 bool forwarding = false;
 bool backwarding = false;
@@ -90,6 +90,8 @@ bool rightshift = false;
 bool falling = false;
 
 int counter = 0;
+
+float floatingCoordinate[20][3];
 void CreateTexture(unsigned int textureArray[], char * strFileName, int textureID)
 {
     
@@ -144,7 +146,38 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
 /************************** Texture Mapping Operations ******************************************/
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+void generateRandomFloatingCooridinate()
+{
+    int counter = 1;
+    float x, y, z;
+    bool flag;
+    floatingCoordinate[0][0] = 0;
+    floatingCoordinate[0][1] = -2;
+    floatingCoordinate[0][2] = 0;
+    while (counter < 20)
+    {
+        x = rand() % 80;
+        z = rand() % 80;
+        flag = false;
+        for (int i = 0; i < counter; i++)
+            if (sqrt((floatingCoordinate[i][0] - x)*(floatingCoordinate[i][0] - x)+(floatingCoordinate[i][2] - z)*(floatingCoordinate[i][2] - z)) <= 8.5)
+            {
+                flag = true;
+                break;
+            }
+        if (!flag)
+            for (int i = 0; i < counter; i++)
+                if (sqrt((floatingCoordinate[i][0] - x)*(floatingCoordinate[i][0] - x)+(floatingCoordinate[i][2] - z)*(floatingCoordinate[i][2] - z)) <= 12)
+                {
+                    floatingCoordinate[counter][0] = x;
+                    floatingCoordinate[counter][1] = -2;
+                    floatingCoordinate[counter][2] = z;
+                    counter ++;
+                    break;
+                }
+                
+    }
+}
 
 // Initialize OpenGL graphics
 void init(void)
@@ -162,6 +195,7 @@ void init(void)
     CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
     CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
     
+    generateRandomFloatingCooridinate();
     
     glClearColor(1, 1, 1, 1);           // White background
     glShadeModel (GL_SMOOTH);
@@ -180,7 +214,6 @@ void drawBackground(float length)
     glTexCoord2f(1.0f, 1.0f);   glVertex3f(-length,  length,  length);
     glTexCoord2f(1.0f, 0.0f);   glVertex3f( length,  length,  length);
     glEnd();
-    
     
     glBegin(GL_QUADS);
     // Bottom face (y = -length)
@@ -275,7 +308,6 @@ void camera()
     glRotatef(xrot, 1, 0, 0);
     glRotatef(yrot, 0, 1, 0);
     //gluLookAt(xpos, ypos, zpos, xrot, yrot, 0, 1, 1, 0);
-    
     glTranslatef(-xpos, -ypos, -zpos);
 }
 
@@ -368,7 +400,7 @@ void display(void)
     gluPerspective(60.0,(GLfloat)width/(GLfloat)height, 0.1, 300);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    
+    floors.clear();
     camera();
     
     /******** Lighting Settings ********/
@@ -383,10 +415,7 @@ void display(void)
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     
     glEnable(GL_COLOR_MATERIAL);
-    //    /******** End Lighting ********/
-
-
-
+    /******** End Lighting ********/
     
     //obstacles on the last block
     glPushMatrix();
@@ -411,32 +440,29 @@ void display(void)
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
+    
     //draw floating floors
+    float x = 0;
+    float y = -2;
+    float z = 0;
+    float gap = 4;
+
+    for (int i = 0; i < 20; i++)
+    {
+        x =floatingCoordinate[i][0];
+        y =floatingCoordinate[i][1];
+        z =floatingCoordinate[i][2];
+        glPushMatrix();
+        glTranslatef(x, y, z);
+        if (i%2 == 0) glRotatef(f_rotateY, 0.0, 1.0, 0.0);
+        buffer = new BoundingBox(x-3, x+3, -1.5, -2.5, z-3, z+3);
+        floors.push_back(*buffer);
+        drawFloating(3.0);
+        glPopMatrix();
+    }
     glPushMatrix();
-    glTranslatef(0.0, -2.0, 90.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93);
-    floors.push_back(*buffer);
-    drawFloating(3.0);
-    glPopMatrix();
-    
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 104.0);
-    glRotatef(f_rotateY, 0.0, 1.0, 0.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 95, 113);
-    floors.push_back(*buffer);
-    drawFloating(9.0);
-    glPopMatrix();
-    
-    glPushMatrix();
-    glTranslatef(0.0, -2.0, 118.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121);
-    floors.push_back(*buffer);
-    drawFloating(3.0);
-    glPopMatrix();
-    
-    glPushMatrix();
-    glTranslatef(0.0, -22.0, 104.0);
-    drawBackground(50.0);
+    //glTranslatef(0.0, -22.0, 104.0);
+    drawBackground(100.0);
     glPopMatrix();
     
     glColor3f(1.0f, 1.0f, 1.0f);
@@ -459,7 +485,11 @@ void checkBounding(int x, int y)
 {
     bool flag = false;
     for (int i = 0; i < floors.size();i++)
-        if (x <= floors[i].right && x >= floors[i].left && y >= floors[i].front && y <= floors[i].back) flag = true;
+        if (x <= floors[i].right && x >= floors[i].left && y >= floors[i].front && y <= floors[i].back)
+        {
+            flag = true;
+            which_object = i;
+        }
     if (!flag) falling = true;
 }
 // keyboard callback function
@@ -468,7 +498,7 @@ void reset()
 {
     xpos = 0;
     ypos = 0;
-    zpos = 130;
+    zpos = 0;
     falling = false;
     xrot = 0;
     yrot = 0;
@@ -501,7 +531,11 @@ void idle(void)
         if (counter < 20) ypos += rate;
         else if (counter < 39) ypos -= rate;
         else
-        {jumpping = false; counter = 0;}
+        {
+            jumpping = false;
+            counter = 0;
+            checkBounding(xpos, zpos);
+        }
         counter ++;
     }
     
@@ -542,7 +576,7 @@ void idle(void)
     if (falling)
     {
         ypos -= 0.3;
-        if (ypos < -20) reset();
+        if (ypos < -50) reset();
     }
     glutPostRedisplay();
 }
@@ -556,7 +590,6 @@ void idle(void)
 void keyboard(unsigned char key, int x, int y)
 {
     int w = glutGetWindow();
-    float xrotrad, yrotrad;
     switch (key)
     {
         case 27:
