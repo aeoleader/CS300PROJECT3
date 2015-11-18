@@ -90,19 +90,6 @@ float floatingCoordinate[20][3];    // store the coordinates for random generate
 /************************** Texture Mapping Operations ******************************************/
 unsigned int g_Texture[MAX_TEXTURES] = {0};
 
-float lastx, lasty;
-
-float xrot = 0, yrot = 90, xpos = 0, ypos = 0, zpos = 0, angle = 0.0, rx = 0, ry = 0, rz = 0;
-bool jumpping = false;
-bool forwarding = false;
-bool backwarding = false;
-bool leftshift = false;
-bool rightshift = false;
-bool falling = false;
-
-int counter = 0;
-
-float floatingCoordinate[20][3];
 void CreateTexture(unsigned int textureArray[], char * strFileName, int textureID)
 {
     
@@ -306,6 +293,7 @@ void camera()
     glRotatef(xrot, 1, 0, 0);
     glRotatef(yrot, 0, 1, 0);
     //gluLookAt(xpos, ypos, zpos, xrot, yrot, 0, 1, 1, 0);
+    
     glTranslatef(-xpos, -ypos, -zpos);
 }
 
@@ -655,6 +643,7 @@ void idle(void)
 void keyboard(unsigned char key, int x, int y)
 {
     int w = glutGetWindow();
+    float xrotrad, yrotrad;
     switch (key)
     {
         case 27: //exit the application
