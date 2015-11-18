@@ -1,16 +1,17 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Name: Nan Jiang, Pratistha Bhandari, Xiangyu Li
  * Assignment: Project 3
- * Title: program title
+ * Title: 3D world navigation
  * Course: CS 300
  * Semester: Fall 2015
  * Instructor: D. Byrnes
- * Date: the current date
- * Sources consulted: any books consulted in writing the program
- * Program description: a description of what your program does
- * Known bugs: description of known bugs and other program imperfections
- * Creativity: anything extra you added to the program
- * Instructions: instructions to user on how to execute your program
+ * Date: 11/17/15
+ * Sources consulted: Lecture notes, course book, and stack overflow.
+ * Program description: this program creates a 3D world that the user can navigate through keyboard and mouse controls. this is a small game of jumping over floating blocks and if you fail to make the jump, you fall and the game restarts.
+ * Instructions: Complete keyboard instructions on how to navigate the world and play the game are given in the read me file.
+ 'w', 's', 'a', 'd' move the camera forward, backward, left, and right respectively
+ spacebar to jump
+ 'esc' key exits the application.
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <cmath>
@@ -23,7 +24,7 @@
 #include <vector>
 
 using namespace std;
-GLUquadricObj *obj;
+GLUquadricObj *obj; //creates a glu quadric object
 
 /***** Global variables *****/
 const GLint SCREEN_WIDTH = 800;      // window dimensions
@@ -43,9 +44,9 @@ GLfloat light_pos[] = { 0.3, 0.2, 0.6, 0.0 };
 // This is our camera rotation degree
 GLfloat g_rotateX = 0, g_rotateY = 0;
 
-GLfloat f_rotateY = 0;
-GLfloat rotateYtea = 0;
-bool f_turn = false;
+GLfloat f_rotateY = 0; //holds the rotation along y-axis for the block
+GLfloat rotateYtea = 0; //holds rotation of teapots along y-axis
+bool f_turn = false; //turning the camera
 
 /////// @Pratshita /////////////
 GLfloat trans_y = 0;
@@ -82,11 +83,11 @@ struct BoundingBox {
     BoundingBox(float _left=0, float _right=0, float _top=0, float _bottom=0, float _front=0, float _back=0): left(_left), right(_right), top(_top), bottom(_bottom), front(_front), back(_back) {}
 };
 
-vector<BoundingBox> objects;
-BoundingBox* buffer;
+vector<BoundingBox> objects; //store the information from the BoundingBox struct in a vector
+BoundingBox* buffer; //pointer
 
 int which_object = 2;
-//////////////////////////////////////////////////////////////////////////////////////////////////
+
 /************************** Texture Mapping Operations ******************************************/
 unsigned int g_Texture[MAX_TEXTURES] = {0};
 
@@ -116,26 +117,14 @@ void CreateTexture(unsigned int textureArray[], char * strFileName, int textureI
     
     glBindTexture(GL_TEXTURE_2D, textureArray[textureID]);
     
-    // Now comes the important part, we actually pass in all the data from the bitmap to
-    // create the texture. Here is what the parameters mean in gluBuild2DMipmaps():
-    // (We want a 2D texture, 3 channels (RGB), bitmap width, bitmap height, It's an RGB format,
-    //  the data is stored as unsigned bytes, and the actuall pixel data);
-    
-    // What is a Mip map?  Mip maps are a bunch of scaled pictures from the original.  This makes
-    // it look better when we are near and farther away from the texture map.  It chooses the
-    // best looking scaled size depending on where the camera is according to the texture map.
-    // Otherwise, if we didn't use mip maps, it would scale the original UP and down which would
-    // look not so good when we got far away or up close, it would look pixelated.
-    
     // Build Mipmaps (builds different versions of the picture for distances - looks better)
     gluBuild2DMipmaps(GL_TEXTURE_2D, 3,  myTGAImage.width,
                       myTGAImage.height, myTGAImage.format, GL_UNSIGNED_BYTE, myTGAImage.data);
     
-    
-    // Lastly, we need to tell OpenGL the quality of our texture map.  GL_LINEAR is the smoothest.
-    // GL_NEAREST is faster than GL_LINEAR, but looks blochy and pixelated.  Good for slower computers though.
-    // Read more about the MIN and MAG filters at the bottom of main.cpp
-    
+    //quality of texture map
+    //MIN and MAG are the filters
+    //GL_LINEAR is the smoothest.
+    // GL_NEAREST is faster than GL_LINEAR, but looks blochy and pixelated
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
@@ -164,7 +153,7 @@ void init(void)
     
     
     glClearColor(1, 1, 1, 1);           // White background
-    glShadeModel (GL_SMOOTH);
+    glShadeModel (GL_SMOOTH);           // OpenGL shade model is set to GL_SMOOTH
     glEnable(GL_DEPTH_TEST);            // turn on the depth buffer
 }
 
@@ -218,9 +207,12 @@ void drawBackground(float length)
     glDisable(GL_TEXTURE_2D);
 }
 
+//this function draws floating blocks in the scene
+//takes one parameter "mag" which the length of the block and accepts multiples of 3
+//applies texture of the floating blocks
 void drawFloating(float mag)  // multiples of 3
 {
-    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D); //enable texture
     glBindTexture(GL_TEXTURE_2D,  g_Texture[1]);    // Floating texture
     glBegin(GL_QUADS);                // Begin drawing the object with 6 quads
     
@@ -288,14 +280,14 @@ void drawTower()
     glRotatef(90.0,1.0,0.0,0.0);
     glTranslatef(0.0,0.0,-5.0);
     glColor3f(0.858824, 0.858824, 0.439216);
-    gluCylinder(obj,5.0,5.0,100,50,50);
+    gluCylinder(obj,5.0,5.0,100,50,50); //draw a cylinder
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
     glPushMatrix();
     glTranslatef(0.0,10.0,0.0);
     glColor3f(0.2, 0.7, 0.6);
-    glutSolidCube(10.0);
+    glutSolidCube(10.0); //draw a cube
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
@@ -303,13 +295,14 @@ void drawTower()
     glRotatef(-90.0,1.0,0.0,0.0);
     glTranslatef(0.0,0.0,15.0);
     glColor3f(0.2, 0.6, 0.7);
-    glutSolidCone(4.0,9.0,17.0,10.0);
+    glutSolidCone(4.0,9.0,17.0,10.0); //draw a cone
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
     
 }
 
-//creates floating teapots in the sky
+//creates floating teapots in the sky using the GLUT teapot and rotates the pots
+//uses push and pop matrices to handle translations
 void drawTeapots(void)
 {
     glPushMatrix();
@@ -347,7 +340,7 @@ void drawObstacle(void)
     glPushMatrix();
     glColor3f(0.0, 0.5, 0.0);
     glRotatef(-90,1.0,0.0,0.0);
-    glutSolidCone(0.5,1.75,5.0,5.0);
+    glutSolidCone(0.5,1.75,5.0,5.0); //draw solid cone
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
 }
@@ -357,15 +350,17 @@ void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    // Draw 3D Scene
     glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST); //enable depth test
+    
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    int width = glutGet(GLUT_WINDOW_WIDTH);
-    int height = glutGet(GLUT_WINDOW_HEIGHT);
+    
+    int width = glutGet(GLUT_WINDOW_WIDTH); //get window width
+    int height = glutGet(GLUT_WINDOW_HEIGHT); //get window height
     glViewport(0, 0, width, height);
-    gluPerspective(60.0,(GLfloat)width/(GLfloat)height, 0.1, 300);
+    gluPerspective(60.0,(GLfloat)width/(GLfloat)height, 0.1, 300); //use gluPerspective
+    
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
@@ -396,7 +391,7 @@ void display(void)
     drawObstacle();
     glPopMatrix();
     
-    //obstacles on the last block
+    /*************** draw obstacles on the final block ***************/
     glPushMatrix();
     glTranslatef(-1.85,-2.0,89.0);
     drawObstacle();
@@ -404,7 +399,7 @@ void display(void)
     drawObstacle();
     glPopMatrix();
     
-    //draw tower
+    /************************** Draws two towers *********************/
     glPushMatrix();
     glTranslatef(-40.0,0.0,50.0);
     drawTower();
@@ -416,10 +411,12 @@ void display(void)
     drawTower();
     glColor3f(1.0, 1.0, 1.0);
     glPopMatrix();
+    /***************************************************************/
+    
     
     glPushMatrix();
     glTranslatef(0.0, -2.0, 90.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 87, 93); //create a new bounding box for the block
     objects.push_back(*buffer);
     drawFloating(3.0);
     glPopMatrix();
@@ -434,9 +431,16 @@ void display(void)
     
     glPushMatrix();
     glTranslatef(0.0, -2.0, 118.0);
-    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121);
+    buffer = new BoundingBox(-3, 3, -1.5, -2.5, 115, 121); //create a new bounding box for the block
     objects.push_back(*buffer);
     drawFloating(3.0);
+    glPopMatrix();
+    /***************************************************************/
+    
+    //draw background
+    glPushMatrix();
+    glTranslatef(0.0, -22.0, 104.0);
+    drawBackground(50.0);
     glPopMatrix();
     
     glPushMatrix();
@@ -459,7 +463,7 @@ void mouseMovement(int x, int y) {
     glutPostRedisplay();
 }
 
-
+//this function checks for the bounding area
 void checkBounding(int x, int y)
 {
     bool flag = false;
@@ -467,8 +471,8 @@ void checkBounding(int x, int y)
         if (x <= objects[i].right && x >= objects[i].left && y >= objects[i].front && y <= objects[i].back) flag = true;
     if (!flag) falling = true;
 }
-// keyboard callback function
 
+//when you fall from the blocks, this functions gets you back to the starting point and you can start the game all over again
 void reset()
 {
     xpos = 0;
@@ -482,6 +486,7 @@ void reset()
 }
 void idle(void)
 {
+    //rotation of middle block
     if (f_rotateY >= 45)
         f_turn = !f_turn;
     else if (f_rotateY <= -45)
@@ -496,6 +501,8 @@ void idle(void)
     
     float rate = 0.2;
     float xrotrad, yrotrad;
+    
+    //if spacebar is pressed
     if (jumpping)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
@@ -510,6 +517,7 @@ void idle(void)
         counter ++;
     }
     
+    //if the camera is moving forward
     if (forwarding)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
@@ -519,6 +527,7 @@ void idle(void)
         if (!jumpping) checkBounding(xpos, zpos);
     }
     
+    //if the camera is moving backward
     if (backwarding)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
@@ -528,6 +537,7 @@ void idle(void)
         checkBounding(xpos, zpos);
     }
     
+    //if the camera is moving left
     if (leftshift)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
@@ -536,6 +546,7 @@ void idle(void)
         checkBounding(xpos, zpos);
     }
     
+    //if the camera is moving left
     if (rightshift)
     {
         yrotrad = (yrot / 180 * 3.141592654f);
@@ -544,6 +555,7 @@ void idle(void)
         checkBounding(xpos, zpos);
     }
     
+    //if you fall from the floating blocks
     if (falling)
     {
         ypos -= 0.3;
@@ -564,7 +576,7 @@ void keyboard(unsigned char key, int x, int y)
     float xrotrad, yrotrad;
     switch (key)
     {
-        case 27:
+        case 27: //exit the application
             glutDestroyWindow(w);
             glDeleteTextures((GLsizei)MAX_TEXTURES, (GLuint *)g_Texture);
             exit(0);
@@ -587,7 +599,7 @@ void keyboard(unsigned char key, int x, int y)
         default:
             break;
     }
-    glutPostRedisplay();
+    glutPostRedisplay(); //call glutPostRedisplay function
 }
 
 void keyup(unsigned char key, int x, int y)
@@ -617,7 +629,7 @@ int main(int argc, char **argv)
     
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA );
-    glutCreateWindow("Project 3 - I Have No Idea What It Is");  // window title
+    glutCreateWindow("CS 300: Project 3");  // window title
     glutFullScreen();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
