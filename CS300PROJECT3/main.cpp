@@ -93,17 +93,17 @@ unsigned int g_Texture[MAX_TEXTURES] = {0};
 void CreateTexture(unsigned int textureArray[], char * strFileName, int textureID)
 {
     
-    char buffer[30];	//filename holder
-    int status = 0;		//error codes for file read
+    char buffer[30];    //filename holder
+    int status = 0;     //error codes for file read
     TGA myTGAImage;
     
-    if(!strFileName){			// Return from the function if no file name was passed in
+    if(!strFileName){           // Return from the function if no file name was passed in
         
         cout <<"Error occurred, bad file name "<< endl;
         return;
     }
     
-    sprintf (buffer, strFileName);		//load buffer with filename
+    sprintf (buffer, strFileName);      //load buffer with filename
     status = myTGAImage.readTGA(buffer);// Load into a TGA object
     if(status > 1) {
         cout <<"Error occurred = " << status <<strFileName<< endl;
@@ -176,9 +176,9 @@ void init(void)
     glLoadIdentity();
     glutSetCursor(GLUT_CURSOR_NONE);
     glutWarpPointer( SCREEN_WIDTH/2 , SCREEN_HEIGHT/2);
-    CreateTexture(g_Texture, "Sky.tga", 0);			// Load our texture for the sky
-    CreateTexture(g_Texture, "Float.tga", 1);		// Load our texture for the floating object
-    CreateTexture(g_Texture, "Wood.tga", 2);		// Load our texture for the floating object
+    CreateTexture(g_Texture, "Sky.tga", 0);         // Load our texture for the sky
+    CreateTexture(g_Texture, "Float.tga", 1);       // Load our texture for the floating object
+    CreateTexture(g_Texture, "Wood.tga", 2);        // Load our texture for the floating object
     
     generateRandomFloatingCoordinate();
     glClearColor(1, 1, 1, 1);           // White background
